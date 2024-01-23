@@ -3,14 +3,46 @@ import { useState } from "react";
 import AddForm from "../components/AddForm";
 import NumbersList from "../components/NumbersList";
 import Filter from "../components/Filter";
+import { fetchData, addPerson, deleteEntry } from "../api";
+
+const Notification = ({ notification, setNotification }) => {
+  if (notification.message === null) {
+    return null;
+  }
+  return (
+    <div className={`${notification.success ? "success-msg" : "error-msg"}`}>
+      <p>{notification.message}</p>
+      <div
+        onClick={() => setNotification({ success: true, message: null })}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignContent: "center",
+          color: "red",
+          fontWeight: "700",
+        }}
+      >
+        X
+      </div>
+    </div>
+  );
+};
 
 function App() {
-  const [persons, setPersons] = useState([]);
+  const [persons, setPersons] = useState(null);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filteredList, setFilteredList] = useState([]);
+  const [notification, setNotification] = useState({
+    success: true,
+    message: null,
+  });
 
-  function handleAddPerson() {
+  if (!persons) {
+    return null;
+  }
+
+  /* function handleAddPerson() {
     if (!checkDuplicates()) {
       setPersons((prevState) => {
         return [...prevState, { name: newName, number: newNumber }];
@@ -20,42 +52,32 @@ function App() {
     } else {
       alert(`${newName} is already added to the phonebook.`);
     }
-  }
+  } */
 
-  function checkDuplicates() {
-    return persons.some(
-      (person) => person.name.toLowerCase() === newName.toLowerCase()
-    );
-  }
-
-  function filterPhonebook(filter) {
+  function filterPhonebook(filt) {
     setFilteredList(
       persons.filter((person) =>
-        person.name.toLowerCase().includes(filter.toLowerCase())
+        person.name.toLowerCase().includes(filt.toLowerCase())
       )
     );
   }
 
-  function fetchData() {
-    return fetch("http://localhost:3000/persons")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Error fetching data.");
-        }
-        return res.json();
-      })
-      .then((data) => data)
-      .catch((error) => console.log(error));
-  }
-
   useEffect(() => {
-    fetchData().then((data) => setPersons(data));
-  }, []);
+    fetchData()
+      .then((data) => setPersons(data))
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [persons]);
 
   return (
     <div>
       {" "}
       <h2>Phonebook</h2>
+      <Notification
+        notification={notification}
+        setNotification={setNotification}
+      />
       <Filter filterPhonebook={filterPhonebook} />
       <h3>add a new</h3>
       <AddForm
@@ -63,10 +85,20 @@ function App() {
         setNewNumber={setNewNumber}
         newName={newName}
         newNumber={newNumber}
-        handleAddPerson={handleAddPerson}
+        addPerson={addPerson}
+        setPersons={setPersons}
+        persons={persons}
+        setNotification={setNotification}
       />
       <h3>Numbers</h3>
-      <NumbersList filteredList={filteredList} persons={persons} />
+      <NumbersList
+        filteredList={filteredList}
+        setFilteredList={setFilteredList}
+        persons={persons}
+        deleteEntry={deleteEntry}
+        setPersons={setPersons}
+        setNotification={setNotification}
+      />
     </div>
   );
 }

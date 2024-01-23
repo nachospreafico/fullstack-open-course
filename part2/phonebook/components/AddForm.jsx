@@ -3,7 +3,10 @@ const AddForm = ({
   newName,
   setNewNumber,
   setNewName,
-  handleAddPerson,
+  addPerson,
+  setPersons,
+  persons,
+  setNotification,
 }) => {
   return (
     <form>
@@ -28,7 +31,30 @@ const AddForm = ({
           type="submit"
           onClick={(e) => {
             e.preventDefault();
-            handleAddPerson();
+            addPerson(newName, newNumber)
+              .then(() => {
+                setPersons(persons);
+                console.log("Contact added succesfully.");
+              })
+              .then(() => {
+                setNotification({
+                  success: true,
+                  message: `${newName} successfully added to list.`,
+                });
+                setNewName("");
+                setNewNumber("");
+                setTimeout(
+                  () => setNotification({ success: true, message: null }),
+                  5000
+                );
+              })
+              .catch((error) => {
+                console.log(error);
+                setNotification({
+                  success: false,
+                  message: `${newName} has already been deleted from the server.`,
+                });
+              });
           }}
         >
           add
